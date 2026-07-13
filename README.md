@@ -1,24 +1,143 @@
-# AselDev Blazor Clean Architecture Template
+# AselDevBlazorArchitecture
 
-AselDev Blazor is an internal starter template for building company portals,
-admin tools, and module applications with a clean architecture structure.
+An enterprise-oriented **.NET 8 Blazor clean architecture starter** for internal portals, administration systems, and independently deployable business modules.
 
-The template is designed for two main uses:
+The template is intentionally usable **without a database**. Persistence, ASP.NET Core Identity, MySQL, and PostgreSQL can be enabled later without changing the Domain or Application layers. Database migrations and administrator provisioning remain explicit operational actions; the web host does not mutate a database during startup.
 
-- A main Company DX Portal that owns login, users, roles, and SSO token issuing.
-- Separate cloned module apps that can redirect login to the main portal.
+## Current Status
 
-## Optional Database Capability
+| Capability | Status | Notes |
+|---|---|---|
+| Clean Architecture boundaries | Implemented | Domain, Application, Infrastructure, Web, and provider-specific migrations are separated. |
+| Database-free startup | Implemented | Default configuration starts with `Database:Enabled=false`. |
+| PostgreSQL | Implemented, optional | Runtime provider support and an independent migration history are included. |
+| MySQL / MariaDB | Implemented, optional | Pomelo runtime support and an independent migration history are included. |
+| Automatic migrations at startup | Intentionally disabled | Migrations are applied only through an explicit command. |
+| Automatic database seeding | Intentionally disabled | No default administrator or password is created or reset at startup. |
+| Browser authentication | Implemented when database is enabled | Uses an HttpOnly ASP.NET Core Identity application cookie. |
+| JWT API authentication | Implemented when database is enabled | Intended for API and cross-application SSO calls. |
+| Role-based user administration | Implemented when database is enabled | `/users` and `/register` require the `Admin` role. |
+| SSO foundation | Implemented foundation | Supports `IdentityProvider` and `Client` configuration modes; production trust and key management still require deployment configuration. |
+| Serilog file logging | Implemented | Daily rolling logs with configurable retention. |
+| Swagger/OpenAPI | Implemented | Available in the development pipeline. |
+| Automated tests | Not yet included | Authentication, authorization, provider selection, and SSO tests are recommended next. |
+| Production identity bootstrap | Not yet included | Provision the first administrator through an approved deployment/bootstrap process. |
 
-The application starts without a database by default. Database-independent pages
-remain available while local Identity and persistence return a controlled unavailable
-response.
+> [!IMPORTANT]
+> “Implemented” describes code present in the template. Production readiness still requires environment-specific secrets, HTTPS, database provisioning, migrations, administrator bootstrap, security review, and automated verification.
 
-See [Database Setup Guide](Docs/DatabaseSetup.md) for complete PostgreSQL, MySQL,
-migration, secrets, and deployment instructions.
+## What the Template Provides
 
-Enable PostgreSQL or MySQL through user secrets, environment variables, or a deployment secret
-store. Never commit credentials:
+- A public architecture landing page explaining the template's capabilities.
+- A database-optional application startup path with controlled unavailable services when persistence is disabled.
+- ASP.NET Core Identity with username or employee-ID login when persistence is enabled.
+- HttpOnly cookie sessions for the browser; credentials are not stored in `localStorage`.
+- JWT bearer authentication for API and SSO scenarios.
+- Admin-only user creation, user listing, and role assignment.
+- Friendly login return URLs and a separate unauthorized experience.
+- Configurable SSO roles for a central company portal or a client module.
+- PostgreSQL and MySQL migration histories isolated from one another.
+- A safe migration helper that does not update a database unless explicitly requested.
+- Central NuGet package version management through `Directory.Packages.props`.
+- MudBlazor UI, Swagger/OpenAPI, and Serilog request/file logging.
+- A PowerShell helper for renaming the template after cloning.
+- Startup error guidance for configuration, database, migration, assembly-lock, and port problems.
+
+## Technology Stack
+
+- .NET 8 and ASP.NET Core 8
+- Blazor Web App with Interactive Server components
+- MudBlazor 9
+- ASP.NET Core Identity
+- Entity Framework Core 8
+- Npgsql for PostgreSQL
+- Pomelo Entity Framework Core provider for MySQL/MariaDB
+- Cookie and JWT bearer authentication
+- Serilog
+- Swashbuckle / OpenAPI
+- Central Package Management
+
+Package versions are normalized in [`Directory.Packages.props`](Directory.Packages.props).
+
+## Architecture
+
+```text
+Web ───────────────> Application ───────────────> Domain
+ │                        ▲
+ └──> Infrastructure ─────┘
+          │
+          ├──> Migrations.PostgreSql
+          └──> Migrations.MySql
+```
+
+Dependencies point inward:
+
+- **Domain** contains enterprise rules, entities, value concepts, and domain exceptions. It must not depend on EF Core, Identity, MudBlazor, or ASP.NET Core.
+- **Application** contains contracts, DTOs, response models, and use-case boundaries. It depends only on Domain plus minimal abstractions.
+- **Infrastructure** implements persistence, Identity, authentication services, provider selection, logging, and external concerns.
+- **Web** owns UI composition, routing, controllers, authentication endpoints, and dependency registration.
+- **Migration projects** own database-provider-specific EF Core history and design-time factories.
+
+See [`Docs/LayerPurpose.md`](Docs/LayerPurpose.md) for the detailed boundary rules.
+
+## Repository Structure
+
+```text
+AselDevBlazorArchitecture/
+├── AselDevBlazorArchitecture.Domain/
+├── AselDevBlazorArchitecture.Application/
+├── AselDevBlazorArchitecture.Infrastructure/
+├── AselDevBlazorArchitecture.Migrations.PostgreSql/
+├── AselDevBlazorArchitecture.Migrations.MySql/
+├── AselDevBlazorArchitecture.Web/
+├── AselDevBlazorArchitecture.Client/
+├── Docs/
+├── Scripts/
+├── .config/dotnet-tools.json
+├── Directory.Packages.props
+└── AselDevBlazorArchitecture.slnx
+```
+
+`AselDevBlazorArchitecture.Client` is a hosted WebAssembly sample retained in the repository but is not currently included in the main `.slnx`. The actively composed template host is `AselDevBlazorArchitecture.Web`.
+
+## Quick Start Without a Database
+
+### Requirements
+
+- .NET 8 SDK
+- PowerShell 7 for the included helper scripts
+- PostgreSQL or MySQL only when enabling persistence
+
+From the repository root:
+
+```powershell
+dotnet restore AselDevBlazorArchitecture.slnx
+dotnet build AselDevBlazorArchitecture.slnx
+dotnet run --project AselDevBlazorArchitecture.Web
+```
+
+The committed default is:
+
+```json
+"Database": {
+  "Enabled": false,
+  "Provider": "postgresql",
+  "ConnectionString": ""
+}
+```
+
+With persistence disabled:
+
+- The public architecture page can run without a database server.
+- EF Core and local Identity persistence are not registered.
+- Login and user-administration services return controlled unavailable responses.
+- No migration or seeding task runs in the background.
+
+## Enabling Persistence
+
+Never commit real credentials. Use .NET user secrets locally and a managed secret store or environment variables in deployment.
+
+PostgreSQL example:
 
 ```powershell
 dotnet user-secrets init --project AselDevBlazorArchitecture.Web
@@ -28,604 +147,202 @@ dotnet user-secrets set "Database:ConnectionString" "Host=localhost;Port=5432;Da
 dotnet user-secrets set "JwtSettings:Key" "YOUR_RANDOM_SECRET_WITH_AT_LEAST_32_CHARACTERS" --project AselDevBlazorArchitecture.Web
 ```
 
-Migrations and administrator provisioning are explicit operational steps. The web
-application never runs them automatically during startup.
-
-## Current Stack
-
-- .NET 8 / Blazor Server
-- MudBlazor
-- ASP.NET Core Identity
-- JWT authentication
-- Entity Framework Core
-- Pomelo MySQL provider
-- Serilog file logging
-- Clean Architecture project separation
-
-## Solution Structure
+MySQL example values:
 
 ```text
-AselDevBlazorArchitecture.Domain
-  Core entities and domain models.
-
-AselDevBlazorArchitecture.Application
-  DTOs, interfaces, service contracts, response wrappers, and use-case models.
-
-AselDevBlazorArchitecture.Infrastructure
-  EF Core DbContext, Identity, authentication implementations, logging, and
-  external implementation details.
-
-AselDevBlazorArchitecture.Migrations.PostgreSql
-  Independent PostgreSQL migration history and design-time context factory.
-
-AselDevBlazorArchitecture.Migrations.MySql
-  Independent MySQL migration history and design-time context factory.
-
-AselDevBlazorArchitecture.Web
-  Blazor UI, layouts, pages, API controllers, startup configuration, and SSO
-  endpoints.
-
-Docs
-  Extra architecture and SSO notes.
+Database:Provider=mysql
+Database:ConnectionString=server=localhost;port=3306;database=YOUR_DATABASE;uid=YOUR_USER;pwd=YOUR_PASSWORD;SslMode=Preferred;
 ```
 
-## Main Features
+Supported provider values:
 
-- Login by Username / Employee ID and password.
-- Admin-only user creation.
-- Admin user list and role assignment on the Users page.
-- Snackbar feedback for user creation status.
-- Role-based authorization.
-- Friendly unauthorized page for logged-in users without access.
-- Login return URL support through `urlReturn`.
-- Startup fallback error UI with database and general troubleshooting guidance.
-- SSO foundation for IdentityProvider and Client modes.
-- Simplified sidebar and app bar profile menu.
-- Modern template homepage with SSO feature summary.
+| Provider | Accepted values | Migration project |
+|---|---|---|
+| PostgreSQL | `postgresql`, `postgres`, `npgsql` | `AselDevBlazorArchitecture.Migrations.PostgreSql` |
+| MySQL / MariaDB | `mysql`, `mariadb` | `AselDevBlazorArchitecture.Migrations.MySql` |
 
-## First-Time Setup
+When `Database:Enabled=true`, the application validates the selected provider, connection string, and JWT signing key during composition.
 
-### 1. Requirements
+## Provider-Specific Migrations
 
-Install:
+PostgreSQL and MySQL migrations are intentionally independent. Do not apply one provider's migration history to the other provider.
 
-- .NET 8 SDK
-- PostgreSQL or MySQL only when persistence is enabled
-- Repository-local EF Core CLI tool restored with `dotnet tool restore`
-
-Check your SDK:
+Restore the repository-local EF tool and use the helper:
 
 ```powershell
-dotnet --version
-```
+dotnet tool restore
 
-Install or update EF tools:
-
-```powershell
-dotnet tool install --global dotnet-ef
-dotnet tool update --global dotnet-ef
-```
-
-If Visual Studio Package Manager Console shows an EF tools/runtime mismatch,
-run the update command above, then restart Visual Studio or the terminal.
-
-### 2. Optionally Enable the Database
-
-The default configuration keeps persistence disabled, so no database is required
-to start the application. When PostgreSQL- or MySQL-backed Identity is needed, supply these values
-through user secrets or your deployment environment:
-
-```json
-"Database": {
-  "Enabled": true,
-  "Provider": "postgresql",
-  "ConnectionString": "SUPPLY_THROUGH_A_SECRET_PROVIDER"
-}
-```
-
-For production, do not keep real passwords in committed `appsettings.json`.
-Use environment variables, user secrets, or your deployment secret store.
-
-Supported provider values are `postgresql` (aliases: `postgres`, `npgsql`) and
-`mysql` (alias: `mariadb`). The app validates the provider, connection string,
-and JWT signing key only when `Database:Enabled` is `true`.
-
-PostgreSQL example:
-
-```text
-Host=localhost;Port=5432;Database=YOUR_DATABASE;Username=YOUR_USER;Password=YOUR_PASSWORD
-```
-
-MySQL example:
-
-```text
-server=localhost;port=3306;database=YOUR_DATABASE;uid=YOUR_USER;pwd=YOUR_PASSWORD;SslMode=Preferred;
-```
-
-The existing migration set originated from MySQL. Before enabling PostgreSQL in
-a real deployment, use the independent PostgreSQL migration assembly rather than
-applying provider-specific MySQL migrations unchanged.
-
-### Provider-Specific Migrations
-
-Migration histories are isolated into two projects:
-
-```text
-AselDevBlazorArchitecture.Migrations.PostgreSql
-AselDevBlazorArchitecture.Migrations.MySql
-```
-
-Runtime provider selection automatically chooses the matching migration assembly.
-Use the repository-local EF tool through the migration helper:
-
-```powershell
-# Inspect migrations without connecting to a database
+# Inspect without connecting to a database
 .\Scripts\Invoke-DatabaseMigrations.ps1 -Provider PostgreSql -Action List
 .\Scripts\Invoke-DatabaseMigrations.ps1 -Provider MySql -Action List
 
-# Add a migration to only one provider history
+# Add a migration to one provider only
 .\Scripts\Invoke-DatabaseMigrations.ps1 -Provider PostgreSql -Action Add -MigrationName AddExample
 
-# Generate reviewable idempotent SQL without applying it
+# Generate reviewable idempotent SQL
 .\Scripts\Invoke-DatabaseMigrations.ps1 -Provider PostgreSql -Action Script
 
-# Explicitly update a chosen database
+# Apply only when explicitly intended
 .\Scripts\Invoke-DatabaseMigrations.ps1 -Provider PostgreSql -Action Update -ConnectionString "YOUR_SECRET_CONNECTION_STRING"
 ```
 
-The helper never updates a database unless `-Action Update` is explicitly selected
-and a connection string is supplied. The web application never applies migrations
-during startup.
+The `Update` action requires an explicit connection string. The web application never applies migrations automatically.
 
-### 3. Apply Migrations
+For full setup, switching, deployment, and troubleshooting instructions, see [`Docs/DatabaseSetup.md`](Docs/DatabaseSetup.md).
 
-From the solution root:
+## Identity and Browser Sessions
 
-```powershell
-dotnet ef database update --project AselDevBlazorArchitecture.Infrastructure --startup-project AselDevBlazorArchitecture.Web
-```
-
-Useful EF commands:
-
-```powershell
-dotnet ef migrations list --project AselDevBlazorArchitecture.Infrastructure --startup-project AselDevBlazorArchitecture.Web
-dotnet ef migrations add MigrationName --project AselDevBlazorArchitecture.Infrastructure --startup-project AselDevBlazorArchitecture.Web
-dotnet ef database update --project AselDevBlazorArchitecture.Infrastructure --startup-project AselDevBlazorArchitecture.Web
-```
-
-If you see an error like `Unknown column 'a.EmployeeId' in 'field list'`, the
-application code expects a column that your database does not have yet. Run the
-database update command above.
-
-If EF cannot update because DLL files are locked, stop the running app first,
-then run the migration again.
-
-### 4. Provision Identity Explicitly
-
-The web host does not create an administrator or reset passwords. Provision the
-first administrator through a dedicated deployment/bootstrap command or another
-approved identity-management process after applying migrations.
-
-### 5. Run the App
-
-```powershell
-dotnet run --project AselDevBlazorArchitecture.Web
-```
-
-Default local URLs are usually:
-
-```text
-https://localhost:7176
-http://localhost:5000
-```
-
-## Authentication Flow
-
-Login accepts:
+When persistence is enabled, login accepts:
 
 ```text
 Username / Employee ID
 Password
 ```
 
-The login page supports:
+Relevant routes:
 
-```text
-/login?urlReturn=/protected-page
-```
+| Route | Purpose | Access |
+|---|---|---|
+| `/` | Architecture landing page | Public |
+| `/login` | Browser sign-in | Public |
+| `/company-dx-portal` | Example company portal page | Application authorization rules |
+| `/users` | User list and role administration | `Admin` |
+| `/register` | Create a user | `Admin` |
+| `/unauthorized` | Friendly access-denied page | Publicly routable |
 
-Behavior:
+Browser behavior:
 
-- Browser sessions use an HttpOnly ASP.NET Core Identity cookie. Session credentials
-  are never stored in `localStorage` and are not readable by JavaScript.
-- JWT bearer tokens are reserved for API and cross-application SSO calls.
-- If the user is already authenticated, the login page redirects to `urlReturn`.
-- If the user is anonymous and opens a protected page, the app redirects to
-  `/login?urlReturn=...`.
-- If the user is logged in but lacks the required role, the app shows the
-  unauthorized page instead of sending them back to login.
+- The browser receives an HttpOnly ASP.NET Core Identity cookie.
+- JWT tokens are reserved for APIs and cross-application calls.
+- Protected navigation retains `urlReturn`, such as `/login?urlReturn=/users`.
+- Authenticated users without a required role see the unauthorized page rather than being sent through another login loop.
+- With the database disabled, authentication-dependent actions report that the capability is unavailable.
 
-## User Administration
+No public self-registration is enabled by default.
 
-User management is admin-only.
+## SSO Foundation
 
-Open:
+Two configuration modes are supported:
 
-```text
-/users
-```
+### IdentityProvider
 
-The admin can create users with:
+Use for the central Company DX Portal that owns users, passwords, roles, login, and token issuing.
 
-- Employee ID / username
-- Full name
-- Email
-- Department
-- Role
-- Temporary password
+### Client
 
-There is no public self-registration flow by default. This is intentional for
-company/internal systems.
+Use for independently deployed business modules that redirect authentication to the central portal and trust its token configuration.
 
-## SSO Modes
-
-The template supports two SSO modes.
-
-### IdentityProvider Mode
-
-Use this for the main Company DX Portal.
-
-```json
-"Sso": {
-  "Mode": "IdentityProvider",
-  "Authority": "https://company-portal",
-  "LoginUrl": "/login",
-  "UserInfoUrl": "/api/sso/me",
-  "AllowedReturnHosts": [
-    "company-portal",
-    "leave-app.company-portal",
-    "shuttle-app.company-portal"
-  ]
-}
-```
-
-Responsibilities:
-
-- Own users and passwords.
-- Own roles.
-- Issue JWT tokens.
-- Provide the portal login page.
-- Provide SSO endpoints for other apps.
-- Redirect users back only to trusted app domains.
-- Show the Users admin page.
-
-### Client Mode
-
-Use this for cloned module apps.
-
-```json
-"Sso": {
-  "Mode": "Client",
-  "Authority": "https://company-portal",
-  "LoginUrl": "https://company-portal/login",
-  "UserInfoUrl": "https://company-portal/api/sso/me",
-  "AllowedReturnHosts": []
-}
-```
-
-Behavior:
-
-- Protected pages redirect to the main portal login.
-- Local user administration is hidden.
-- The module app trusts the main portal JWT settings.
-
-### Cross-App Return URLs
-
-When the main portal and modules use subdomains:
-
-```text
-https://tpc-dx.cloud
-https://leave-app.tpc-dx.cloud
-https://shuttle-app.tpc-dx.cloud
-```
-
-configure the main portal allow-list:
-
-```json
-"Sso": {
-  "Mode": "IdentityProvider",
-  "Authority": "https://tpc-dx.cloud",
-  "LoginUrl": "/login",
-  "UserInfoUrl": "/api/sso/me",
-  "AllowedReturnHosts": [
-    "tpc-dx.cloud",
-    "leave-app.tpc-dx.cloud",
-    "shuttle-app.tpc-dx.cloud"
-  ]
-}
-```
-
-Then client apps can redirect to:
-
-```text
-https://tpc-dx.cloud/login?urlReturn=https%3A%2F%2Fleave-app.tpc-dx.cloud%2Fsome-page
-```
-
-The portal will return only to hosts listed in `AllowedReturnHosts`. Never allow all external URLs.
-
-## SSO Endpoints
-
-Base route:
+SSO API base route:
 
 ```text
 /api/sso
 ```
 
-Discovery:
+Available endpoints:
 
 ```http
-GET /api/sso/.well-known
-```
-
-Token:
-
-```http
+GET  /api/sso/.well-known
 POST /api/sso/token
-Content-Type: application/json
-
-{
-  "usernameOrEmployeeId": "YOUR_EMPLOYEE_ID",
-  "password": "your-password"
-}
+GET  /api/sso/me
 ```
 
-Current user:
+Cross-application return URLs are restricted to `Sso:AllowedReturnHosts`. Never configure an unrestricted external return URL.
 
-```http
-GET /api/sso/me
-Authorization: Bearer {access_token}
-```
+See [`Docs/CompanySso.md`](Docs/CompanySso.md) for the flow, claims, endpoints, and client configuration.
 
-JWT claims include:
+## Logging and API Documentation
 
-```text
-sub
-nameidentifier
-name
-email
-preferred_username
-employee_id
-department
-role
-jti
-```
+Serilog configuration lives in `AselDevBlazorArchitecture.Web/appsettings.json`.
 
-## JWT Settings
-
-Configure:
-
-```json
-"JwtSettings": {
-  "Key": "CHANGE_THIS_TO_A_LONG_SECRET_KEY",
-  "Issuer": "AselDevBlazorArchitecture",
-  "Audience": "AselDevBlazorArchitectureUsers",
-  "ExpiryInMinutes": 480
-}
-```
-
-For cloned client apps to trust the portal token, they must use compatible
-issuer, audience, and signing key validation.
-
-Before production:
-
-- Replace the default signing key.
-- Store the key securely.
-- Use HTTPS.
-- Review token lifetime.
-- Consider refresh tokens if users need long sessions across many apps.
-
-## Logging
-
-Serilog is configured in:
-
-```text
-AselDevBlazorArchitecture.Web/appsettings.json
-```
-
-Default log path:
+Default rolling log location:
 
 ```text
 AselDevBlazorArchitecture.Web/SystemLogs/aseldevlogs-.log
 ```
 
-Logs roll daily and keep recent files based on `retainedFileCountLimit`.
+Swagger/OpenAPI services and middleware are configured for development. Do not expose development API documentation publicly without an explicit security decision.
 
-## Startup Error UI
+## Creating a New Application
 
-`Program.cs` includes fallback startup error handling.
+The recommended workflow is to mark this GitHub repository as a template, then use **Use this template** for each portal or module. This creates a separate repository without carrying the template's Git history or remote.
 
-Database-related startup errors show guidance for:
+After creating the new repository:
 
-- Enabling persistence without supplying `Database:ConnectionString`.
-- Running EF migrations.
-- Checking migration list.
-- Stopping the app if DLLs are locked.
-- MySQL SSL connection issues.
-- Running migrations and administrator provisioning explicitly.
+1. Clone it.
+2. Preview the rename operation.
+3. Rename the template.
+4. Restore and build.
+5. Configure its database and SSO mode only if required.
 
-General startup errors show guidance for:
-
-- Running `dotnet build`.
-- Checking appsettings files.
-- Checking secrets and environment variables.
-- Reviewing logs.
-- Checking service registration changes.
-- Checking port conflicts.
-
-## Creating a New Project From This Template
-
-Recommended GitHub flow:
-
-1. Upload this repository to GitHub.
-2. Mark it as a template repository.
-3. For each new app/module, click `Use this template`.
-4. Configure the new app's database, JWT, and SSO mode.
-5. Rename namespaces/project branding only after the app builds.
-
-If you used normal `git clone`, remove the original remote:
+Because the rename script currently has a legacy default prefix, pass the complete current name explicitly:
 
 ```powershell
-git remote -v
-git remote remove origin
-git remote add origin https://github.com/your-company/your-new-app.git
-git branch -M main
-git push -u origin main
-```
+.\Scripts\Rename-Template.ps1 `
+  -OldName AselDevBlazorArchitecture `
+  -NewName CompanyDxPortal `
+  -WhatIf
 
-If you want a completely fresh Git history:
+.\Scripts\Rename-Template.ps1 `
+  -OldName AselDevBlazorArchitecture `
+  -NewName CompanyDxPortal
 
-```powershell
-Remove-Item -Recurse -Force .git
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/your-company/your-new-app.git
-git push -u origin main
-```
-
-## Renaming the Template After Clone
-
-Use the included rename script from the cloned project root:
-
-```powershell
-.\Scripts\Rename-Template.ps1 -NewName CompanyDxPortal
-```
-
-Preview the changes first:
-
-```powershell
-.\Scripts\Rename-Template.ps1 -NewName CompanyDxPortal -WhatIf
-```
-
-What it does:
-
-- Replaces `AselDevBlazorArchitecture` with the new name in source/config/docs files.
-- Renames solution, project files, folders, and any file names that include the old name.
-- Skips `.git`, `.vs`, `bin`, and `obj` while editing references.
-- Removes `bin` and `obj` folders so the next build starts clean.
-
-Before running it, close Visual Studio, VS Code, running `dotnet` apps, and any
-file preview windows for the cloned folder. If a file is locked, the script
-pauses before folder renames; close the locking app and run the same command
-again.
-
-Then run:
-
-```powershell
 dotnet restore CompanyDxPortal.slnx
 dotnet build CompanyDxPortal.slnx
 ```
 
-If you want to keep `bin` and `obj` folders:
+Close Visual Studio, running `dotnet` processes, and file-preview windows before renaming. The script skips `.git`, `.vs`, `bin`, and `obj` while replacing text and removes build outputs unless `-SkipClean` is supplied.
 
-```powershell
-.\Scripts\Rename-Template.ps1 -NewName CompanyDxPortal -SkipClean
-```
-
-## Recommended Company Architecture
-
-Use this template as:
+## Recommended Enterprise Deployment Model
 
 ```text
 Company DX Portal
-  Mode: IdentityProvider
-  Owns: login, users, roles, news, launcher buttons, SSO token issuing
+  SSO mode: IdentityProvider
+  Owns: users, roles, login, application launcher, JWT issuing
 
-Module App 1
-  Mode: Client
-  Owns: module-specific pages and business logic
-  Login: redirects to Company DX Portal
+Business Module A
+  SSO mode: Client
+  Owns: its business pages and use cases
+  Authentication: redirects to the Company DX Portal
 
-Module App 2
-  Mode: Client
-  Owns: module-specific pages and business logic
-  Login: redirects to Company DX Portal
+Business Module B
+  SSO mode: Client
+  Owns: its business pages and use cases
+  Authentication: redirects to the Company DX Portal
 ```
 
-This keeps identity centralized while allowing each module to evolve as a
-separate application.
+This keeps identity centralized while allowing business modules to be deployed and evolved independently.
 
-## Clean Architecture Rules
+## Production Checklist
 
-Use this direction for dependencies:
+Before using the template in production:
 
-```text
-Web -> Application -> Domain
-Web -> Infrastructure -> Application -> Domain
-```
+- [ ] Store database and JWT secrets outside committed configuration.
+- [ ] Use HTTPS and secure cookie settings appropriate to the deployment topology.
+- [ ] Review `Sso:AllowedReturnHosts`, issuer, audience, signing key, and token lifetime.
+- [ ] Provision the target database explicitly.
+- [ ] Review generated migration SQL before applying it.
+- [ ] Provision the first administrator through an approved process.
+- [ ] Confirm that Swagger is not unintentionally exposed.
+- [ ] Add authentication, authorization, SSO, and provider-selection tests.
+- [ ] Add health checks, monitoring, backup, and recovery procedures.
+- [ ] Perform dependency, secret, and application security scanning.
 
-Keep these boundaries:
+## Current Limitations and Recommended Next Work
 
-- Domain should not depend on EF Core, Identity, MudBlazor, or web concerns.
-- Application should define contracts, DTOs, and use-case shapes.
-- Infrastructure should implement database, Identity, logging, and external integrations.
-- Web should handle UI, routing, controllers, and composition.
+1. Add automated unit, integration, authorization, and provider-selection tests.
+2. Add an explicit, auditable administrator bootstrap tool that is separate from web startup.
+3. Complete production-grade SSO trust management, key rotation, and refresh/session strategy.
+4. Decide whether to integrate the hosted WebAssembly sample into the solution or remove it from the template.
+5. Update the rename script's default old name to `AselDevBlazorArchitecture` after its behavior is tested end to end.
+6. Add deployment-specific health checks and observability exports.
 
-## Common Troubleshooting
+## Documentation
 
-### Invalid username/employee ID or password
+- [`Docs/DatabaseSetup.md`](Docs/DatabaseSetup.md) — PostgreSQL, MySQL, migrations, secrets, and deployment
+- [`Docs/CompanySso.md`](Docs/CompanySso.md) — identity-provider/client modes and SSO endpoints
+- [`Docs/LayerPurpose.md`](Docs/LayerPurpose.md) — layer responsibilities and dependency rules
+- [`AselDevBlazorArchitecture.Web/Docs/LayerPurpose.md`](AselDevBlazorArchitecture.Web/Docs/LayerPurpose.md) — in-application layer summary
 
-Check that persistence is enabled, the database points to the expected environment,
-and an administrator has been provisioned through the deployment/bootstrap process.
+## License
 
-### Unknown column `EmployeeId`
-
-Run:
-
-```powershell
-dotnet ef database update --project AselDevBlazorArchitecture.Infrastructure --startup-project AselDevBlazorArchitecture.Web
-```
-
-### EF tools version warning
-
-Run:
-
-```powershell
-dotnet tool update --global dotnet-ef
-```
-
-### MySQL SSL authentication error
-
-For local/internal development, add this only if allowed by your environment:
-
-```text
-SslMode=None;
-```
-
-For production, use the SSL mode required by your database/security team.
-
-### App starts but user data is missing
-
-Check:
-
-- The app is connected to the correct database.
-- Migrations are applied.
-- Startup tasks/seeder ran.
-- The Users page is opened by an Admin user.
-
-## Additional Docs
-
-- `Docs/CompanySso.md`
-- `Docs/LayerPurpose.md`
-
-## Template Readiness
-
-This template is ready to use as an internal starter for new projects.
-
-Recommended next hardening before production:
-
-- Move seeded admin credentials to secure configuration.
-- Move admin user management logic from the Razor page into an Application service.
-- Add refresh token support if sessions must survive across many apps for long periods.
-- Add a sample client-module configuration file.
-- Add automated tests around auth, roles, and SSO endpoints.
+See [`LICENSE.txt`](LICENSE.txt).
