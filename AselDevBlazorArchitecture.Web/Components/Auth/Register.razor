@@ -1,0 +1,586 @@
+@* ╔══════════════════════════════════════════════════════════════╗
+   ║  Register.razor — AselDev Enterprise Register Page          ║
+   ╚══════════════════════════════════════════════════════════════╝ *@
+
+@page "/register"
+@attribute [Authorize(Roles = "Admin")]
+@layout EmptyLayout
+@using AselDevBlazorArchitecture.Application.Common.Interfaces.AuthServices
+
+@using AselDevBlazorArchitecture.Application.Features.Auth.DTOs
+@using AselDevBlazorArchitecture.Web.Components.Layout
+@using Microsoft.AspNetCore.Authorization
+@inject IAuthService AuthService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+
+<PageTitle>Create Account — AselDev Enterprise</PageTitle>
+
+<div class="reg-root">
+
+    @* ── Left Panel ── *@
+    <div class="reg-left">
+        <div class="reg-left-content">
+
+            @* Brand *@
+            <div class="reg-brand">
+                <div class="reg-brand-icon">
+                    <MudIcon Icon="@Icons.Material.Filled.Hub" />
+                </div>
+                <span class="reg-brand-name">AselDev</span>
+                <span class="reg-brand-tag">Enterprise</span>
+            </div>
+
+            <h1 class="reg-left-title">
+                Join the<br />
+                <span class="reg-left-accent">Enterprise Platform</span>
+            </h1>
+
+            <p class="reg-left-desc">
+                Create your account to access the full suite of
+                enterprise tools, dashboards, and monitoring features.
+            </p>
+
+            @* Steps *@
+            <div class="reg-steps">
+                @foreach (var (step, i) in _steps.Select((s, i) => (s, i)))
+                {
+                    <div class="reg-step">
+                        <div class="reg-step-num">@(i + 1)</div>
+                        <div class="reg-step-info">
+                            <span class="reg-step-title">@step.Title</span>
+                            <span class="reg-step-desc">@step.Desc</span>
+                        </div>
+                    </div>
+                }
+            </div>
+
+        </div>
+
+        <div class="reg-left-footer">
+            AselDev Enterprise &copy; @DateTime.Now.Year
+        </div>
+    </div>
+
+    @* ── Right Panel ── *@
+    <div class="reg-right">
+        <div class="reg-card">
+
+            <div class="reg-card-header">
+                <div class="reg-card-icon">
+                    <MudIcon Icon="@Icons.Material.Outlined.PersonAdd" />
+                </div>
+                <h2 class="reg-card-title">Create account</h2>
+                <p class="reg-card-sub">Fill in your details to get started</p>
+            </div>
+
+            <MudForm @ref="_form" @bind-IsValid="_isValid">
+                <div class="reg-form-grid">
+
+                    <MudTextField @bind-Value="_model.FullName"
+                                  Label="Full Name"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Full name is required"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Outlined.Person"
+                                  Class="reg-field reg-field--full"
+                                  Disabled="@_loading" />
+
+                    <MudTextField @bind-Value="_model.EmployeeId"
+                                  Label="Employee ID"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Employee ID is required"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Outlined.Badge"
+                                  Class="reg-field"
+                                  Disabled="@_loading" />
+
+                    <MudTextField @bind-Value="_model.Email"
+                                  Label="Email Address"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Email"
+                                  Required="true"
+                                  RequiredError="Email is required"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Outlined.Email"
+                                  Class="reg-field"
+                                  Disabled="@_loading" />
+
+                    <MudTextField @bind-Value="_model.Department"
+                                  Label="Department"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Outlined.Business"
+                                  Placeholder="e.g. IT, HR, Finance"
+                                  Class="reg-field"
+                                  Disabled="@_loading" />
+
+                    <MudSelect @bind-Value="_model.Role"
+                               Label="Role"
+                               Variant="Variant.Outlined"
+                               AnchorOrigin="Origin.BottomCenter"
+                               Required="true"
+                               Adornment="Adornment.Start"
+                               AdornmentIcon="@Icons.Material.Outlined.AdminPanelSettings"
+                               Class="reg-field reg-field--full"
+                               Disabled="@_loading">
+                        @foreach (var role in _roles)
+                        {
+                            <MudSelectItem Value="@role">@role</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudTextField @bind-Value="_model.Password"
+                                  Label="Password"
+                                  Variant="Variant.Outlined"
+                                  InputType="@_passwordInputType"
+                                  Required="true"
+                                  RequiredError="Password is required"
+                                  HelperText="Min 8 chars, uppercase + number required"
+                                  Adornment="Adornment.End"
+                                  AdornmentIcon="@_passwordIcon"
+                                  OnAdornmentClick="TogglePassword"
+                                  Class="reg-field"
+                                  Disabled="@_loading" />
+
+                    <MudTextField @bind-Value="_confirmPassword"
+                                  Label="Confirm Password"
+                                  Variant="Variant.Outlined"
+                                  InputType="@_confirmInputType"
+                                  Required="true"
+                                  RequiredError="Please confirm your password"
+                                  Validation="@(new Func<string, string?>(ValidateConfirmPassword))"
+                                  Adornment="Adornment.End"
+                                  AdornmentIcon="@_confirmIcon"
+                                  OnAdornmentClick="ToggleConfirm"
+                                  Class="reg-field"
+                                  Disabled="@_loading" />
+
+                </div>
+
+                @* Error messages *@
+                @if (_errorMessage is not null)
+                {
+                    <MudAlert Severity="Severity.Error"
+                              Dense="true"
+                              Class="mt-3"
+                              ShowCloseIcon="true"
+                              CloseIconClicked="@(() => _errorMessage = null)">
+                        @_errorMessage
+                    </MudAlert>
+                }
+
+                @if (_errors.Any())
+                {
+                    <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-3">
+                        <ul class="reg-error-list">
+                            @foreach (var err in _errors)
+                            {
+                                <li>@err</li>
+                            }
+                        </ul>
+                    </MudAlert>
+                }
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           FullWidth="true"
+                           Size="Size.Large"
+                           OnClick="HandleRegisterAsync"
+                           Disabled="@_loading"
+                           Class="reg-btn">
+                    @if (_loading)
+                    {
+                        <MudProgressCircular Size="Size.Small"
+                                             Indeterminate="true"
+                                             Class="mr-2" />
+                        <span>Creating account...</span>
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Outlined.HowToReg"
+                                 Class="mr-2"
+                                 Style="font-size:18px;" />
+                        <span>Create Account</span>
+                    }
+                </MudButton>
+            </MudForm>
+
+            <div class="reg-card-footer">
+                <span>Already have an account?</span>
+                <MudLink Href="/login" Class="reg-link">Sign in</MudLink>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .reg-root {
+        display: flex;
+        min-height: 100vh;
+        background: #F8FAFC;
+    }
+
+    /* ══════════════════════════════════════
+           LEFT PANEL
+           ══════════════════════════════════════ */
+    .reg-left {
+        flex: 0 0 380px;
+        background: linear-gradient(145deg, #0F172A 0%, #1E3A5F 55%, #1E293B 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 48px 36px 32px;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .reg-left::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 260px;
+            height: 260px;
+            background: rgba(59,130,246,0.12);
+            border-radius: 50%;
+            filter: blur(55px);
+            pointer-events: none;
+        }
+
+    .reg-left-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .reg-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 40px;
+    }
+
+    .reg-brand-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        background: rgba(59,130,246,0.20);
+        border: 1px solid rgba(59,130,246,0.30);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .reg-brand-icon .mud-icon-root {
+            color: #60A5FA !important;
+            font-size: 18px !important;
+        }
+
+    .reg-brand-name {
+        font-family: var(--font-display);
+        font-size: 17px;
+        font-weight: 700;
+        color: #F8FAFC;
+    }
+
+    .reg-brand-tag {
+        font-size: 9.5px;
+        font-weight: 700;
+        color: #60A5FA;
+        background: rgba(59,130,246,0.15);
+        border: 1px solid rgba(59,130,246,0.25);
+        border-radius: 99px;
+        padding: 2px 9px;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+    }
+
+    .reg-left-title {
+        font-family: var(--font-display);
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #F8FAFC;
+        line-height: 1.2;
+        letter-spacing: -0.4px;
+        margin: 0 0 14px;
+    }
+
+    .reg-left-accent {
+        background: linear-gradient(135deg, #60A5FA, #818CF8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .reg-left-desc {
+        font-size: 0.825rem;
+        color: #94A3B8;
+        line-height: 1.65;
+        margin: 0 0 28px;
+    }
+
+    .reg-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .reg-step {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .reg-step-num {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: rgba(59,130,246,0.20);
+        border: 1px solid rgba(59,130,246,0.30);
+        color: #60A5FA;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    .reg-step-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .reg-step-title {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #E2E8F0;
+    }
+
+    .reg-step-desc {
+        font-size: 0.72rem;
+        color: #64748B;
+    }
+
+    .reg-left-footer {
+        font-size: 11.5px;
+        color: #475569;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* ══════════════════════════════════════
+           RIGHT PANEL
+           ══════════════════════════════════════ */
+    .reg-right {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 24px;
+        overflow-y: auto;
+        background: #F8FAFC;
+    }
+
+    .reg-card {
+        width: 100%;
+        max-width: 480px;
+    }
+
+    .reg-card-header {
+        text-align: center;
+        margin-bottom: 28px;
+    }
+
+    .reg-card-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 13px;
+        background: var(--asel-accent-soft);
+        border: 1px solid rgba(59,130,246,0.20);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 14px;
+    }
+
+        .reg-card-icon .mud-icon-root {
+            color: var(--asel-accent) !important;
+            font-size: 22px !important;
+        }
+
+    .reg-card-title {
+        font-family: var(--font-display);
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--asel-text-primary);
+        margin: 0 0 6px;
+        letter-spacing: -0.3px;
+    }
+
+    .reg-card-sub {
+        font-size: 0.8rem;
+        color: var(--asel-text-muted);
+        margin: 0;
+        font-weight: 500;
+    }
+
+    .reg-form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .reg-field {
+        width: 100%;
+    }
+
+    .reg-field--full {
+        grid-column: 1 / -1;
+    }
+
+    .reg-btn {
+        border-radius: 10px !important;
+        height: 46px !important;
+        font-family: var(--font-display) !important;
+        font-weight: 600 !important;
+        font-size: 0.875rem !important;
+        box-shadow: 0 4px 14px rgba(59,130,246,0.28) !important;
+        transition: var(--asel-transition) !important;
+    }
+
+    .reg-card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 20px;
+        font-size: 0.8rem;
+        color: var(--asel-text-secondary);
+    }
+
+    .reg-link {
+        font-weight: 600 !important;
+        font-size: 0.8rem !important;
+        color: var(--asel-accent) !important;
+        text-decoration: none !important;
+    }
+
+        .reg-link:hover {
+            text-decoration: underline !important;
+        }
+
+    .reg-error-list {
+        margin: 0;
+        padding: 0 0 0 16px;
+        font-size: 0.775rem;
+    }
+
+    @@media (max-width: 768px) {
+        .reg-left {
+            display: none;
+        }
+
+        .reg-right {
+            padding: 24px 16px;
+            background: #fff;
+        }
+
+        .reg-form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .reg-field--full {
+            grid-column: 1;
+        }
+    }
+
+    @@media (max-width: 400px) {
+        .reg-card {
+            max-width: 100%;
+        }
+    }
+</style>
+
+@code {
+    private RegisterDto _model = new() { Role = "User" };
+    private MudForm _form = default!;
+    private bool _isValid = false;
+    private bool _loading = false;
+    private string? _errorMessage;
+    private List<string> _errors = new();
+    private string _confirmPassword = string.Empty;
+
+    private List<string> _roles = new() { "Admin", "Manager", "User", "Viewer" };
+
+    @* ── Password toggles ── *@
+    private bool _showPassword = false;
+    private bool _showConfirm = false;
+    private InputType _passwordInputType => _showPassword ? InputType.Text : InputType.Password;
+    private InputType _confirmInputType => _showConfirm ? InputType.Text : InputType.Password;
+    private string _passwordIcon => _showPassword
+        ? Icons.Material.Outlined.VisibilityOff
+        : Icons.Material.Outlined.Visibility;
+    private string _confirmIcon => _showConfirm
+        ? Icons.Material.Outlined.VisibilityOff
+        : Icons.Material.Outlined.Visibility;
+
+    private void TogglePassword() => _showPassword = !_showPassword;
+    private void ToggleConfirm() => _showConfirm = !_showConfirm;
+
+    private string? ValidateConfirmPassword(string value)
+        => value != _model.Password ? "Passwords do not match" : null;
+
+    private async Task HandleRegisterAsync()
+    {
+        await _form.ValidateAsync();
+        if (!_isValid) return;
+
+        _loading = true;
+        _errorMessage = null;
+        _errors = new();
+
+        try
+        {
+            var response = await AuthService.RegisterAsync(_model);
+
+            if (response.Success)
+            {
+                Snackbar.Add(
+                    "Account created successfully! Please sign in.",
+                    Severity.Success);
+                NavManager.NavigateTo("/login");
+            }
+            else
+            {
+                _errorMessage = response.Message;
+                _errors.Add(response.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Unexpected error: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private record StepItem(string Title, string Desc);
+
+    private List<StepItem> _steps = new()
+    {
+        new("Fill in your details",  "Enter employee ID, name, email and department"),
+        new("Choose your role",      "Select the appropriate access level"),
+        new("Set a secure password", "Min 8 chars with uppercase and number"),
+    };
+}

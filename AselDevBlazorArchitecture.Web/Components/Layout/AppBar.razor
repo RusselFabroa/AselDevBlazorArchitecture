@@ -1,0 +1,150 @@
+@using AselDevBlazorArchitecture.Application.Features.Auth
+@inject IUserSessionService UserSession
+@inject NavigationManager Nav
+@inject AselDevBlazorArchitecture.Web.Services.SsoNavigationService SsoNavigation
+
+<MudAppBar Elevation="1" Dense="true">
+
+    <!-- LEFT: Menu (visible on small screens) -->
+    <MudIconButton Icon="@Icons.Material.Outlined.Menu"
+                   Edge="Edge.Start"
+                   OnClick="ToggleDrawer"
+                   aria-label="Toggle navigation" />
+
+    <!-- LOGO + BRAND (compact) -->
+    <MudStack Row AlignItems="AlignItems.Center" Spacing="1" Class="ml-2">
+        <MudIcon Icon="@Icons.Material.Outlined.AutoAwesomeMosaic" Color="Color.Primary" />
+        <MudText Typo="Typo.subtitle1" Class="d-none d-sm-inline">AselDev Blazor</MudText>
+    </MudStack>
+
+    <MudSpacer />
+
+    <!-- RIGHT SIDE -->
+    <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
+
+        <MudMenu AnchorOrigin="Origin.BottomRight"
+                 TransformOrigin="Origin.TopRight"
+                 Class="profile-menu">
+
+            <ActivatorContent>
+                <MudIconButton Icon="@Icons.Material.Outlined.AccountCircle" OnClick="@context.ToggleAsync"
+                               Color="@(_isAuthenticated ? Color.Primary : Color.Default)"
+                               title="@(_isAuthenticated ? _userName : "Sign in")"
+                               aria-label="Open profile menu" />
+            </ActivatorContent>
+
+            <ChildContent>
+                @if (_isAuthenticated)
+                {
+                    <div class="profile-menu-header">
+                        <MudAvatar Size="Size.Medium" Color="Color.Primary">
+                            @_userInitials
+                        </MudAvatar>
+                        <MudStack Spacing="0" Class="profile-user-text">
+                            <MudText Typo="Typo.body2">@_userName</MudText>
+                            @if (!string.IsNullOrWhiteSpace(_userEmail))
+                            {
+                                <MudText Typo="Typo.caption">@_userEmail</MudText>
+                            }
+                        </MudStack>
+                    </div>
+
+                    <MudDivider />
+
+                    <MudMenuItem Icon="@Icons.Material.Outlined.Logout"
+                                 OnClick="Logout">
+                        Logout
+                    </MudMenuItem>
+                }
+                else
+                {
+                    <MudMenuItem Icon="@Icons.Material.Outlined.Login"
+                                 OnClick="GoToLogin">
+                        Login
+                    </MudMenuItem>
+                }
+
+            </ChildContent>
+
+        </MudMenu>
+
+    </MudStack>
+
+</MudAppBar>
+
+<style>
+    .profile-menu-header {
+        align-items: center;
+        display: flex;
+        gap: 12px;
+        min-width: 230px;
+        padding: 12px 16px;
+    }
+
+    .profile-user-text {
+        min-width: 0;
+    }
+
+    .profile-user-text .mud-typography-body2,
+    .profile-user-text .mud-typography-caption {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .profile-user-text .mud-typography-body2 {
+        font-weight: 600;
+    }
+</style>
+
+@code {
+
+    [Parameter] public EventCallback OnMenuToggle { get; set; }
+
+    private bool _isAuthenticated;
+    private string _userName = "Guest";
+    private string _userEmail = "";
+    private string _userInitials = "G";
+    protected override async Task OnInitializedAsync()
+    {
+        var session = await UserSession.GetCurrentAsync();
+
+        if (session.IsAuthenticated)
+        {
+            _isAuthenticated = true;
+            _userName = session.DisplayName;
+            _userEmail = session.Email;
+            _userInitials = BuildInitials(_userName);
+        }
+    }
+
+    private async Task Logout()
+    {
+        await UserSession.ClearAsync();
+        Nav.NavigateTo("/", true);
+    }
+
+    private void GoToLogin()
+    {
+        var loginUrl = SsoNavigation.Settings.IsClient
+            ? SsoNavigation.BuildLoginUrl(Nav.Uri)
+            : "/login";
+
+        Nav.NavigateTo(loginUrl, SsoNavigation.Settings.IsClient);
+    }
+
+    private async Task ToggleDrawer()
+        => await OnMenuToggle.InvokeAsync();
+
+    private static string BuildInitials(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length == 0)
+            return "U";
+
+        if (parts.Length == 1)
+            return parts[0][0].ToString().ToUpperInvariant();
+
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+    }
+}

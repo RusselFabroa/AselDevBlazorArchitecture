@@ -1,0 +1,60 @@
+@using AselDevBlazorArchitecture.Web.Components.Auth
+<Router AppAssembly="typeof(Program).Assembly">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="routeData"
+                            DefaultLayout="typeof(Layout.MainLayout)">
+            <NotAuthorized>
+                <RedirectToLogin />
+            </NotAuthorized>
+            <Authorizing>
+                <div class="auth-checking">
+                    <MudProgressCircular Indeterminate="true"
+                                         Color="Color.Primary"
+                                         Size="Size.Small" />
+                    <span>Checking authorization...</span>
+                </div>
+            </Authorizing>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="typeof(Layout.MainLayout)">
+            <div class="auth-notfound">
+                <MudIcon Icon="@Icons.Material.Outlined.SearchOff"
+                         Style="font-size:48px; color:var(--asel-border);" />
+                <MudText Typo="Typo.h6">Page Not Found</MudText>
+                <MudText Typo="Typo.body2" Style="color:var(--asel-text-muted);">
+                    The page you are looking for does not exist.
+                </MudText>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Href="/"
+                           Class="mt-4">
+                    Go Home
+                </MudButton>
+            </div>
+        </LayoutView>
+    </NotFound>
+</Router>
+
+<style>
+    .auth-checking {
+        display:         flex;
+        align-items:     center;
+        justify-content: center;
+        gap:             12px;
+        height:          100vh;
+        font-size:       0.875rem;
+        color:           var(--asel-text-muted);
+    }
+
+    .auth-notfound {
+        display:         flex;
+        flex-direction:  column;
+        align-items:     center;
+        justify-content: center;
+        gap:             8px;
+        height:          60vh;
+        text-align:      center;
+    }
+</style>

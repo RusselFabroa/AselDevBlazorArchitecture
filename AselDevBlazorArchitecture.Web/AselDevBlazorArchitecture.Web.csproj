@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MudBlazor" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AselDevBlazorArchitecture.Application\AselDevBlazorArchitecture.Application.csproj" />
+    <ProjectReference Include="..\AselDevBlazorArchitecture.Infrastructure\AselDevBlazorArchitecture.Infrastructure.csproj" />
+    <ProjectReference Include="..\AselDevBlazorArchitecture.Migrations.MySql\AselDevBlazorArchitecture.Migrations.MySql.csproj" />
+    <ProjectReference Include="..\AselDevBlazorArchitecture.Migrations.PostgreSql\AselDevBlazorArchitecture.Migrations.PostgreSql.csproj" />
+  </ItemGroup>
+
+</Project>

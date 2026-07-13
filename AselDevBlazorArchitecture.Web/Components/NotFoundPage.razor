@@ -1,0 +1,13 @@
+﻿@page "/{*route:nonfile}"
+
+
+
+<MudStack AlignItems="AlignItems.Center">
+	<MudImage Src="/no-content.png" Width="200" Class="mb-4" />
+	<MudText Typo="Typo.h4" Color="Color.Error">404 - Not Found</MudText>
+	<MudText Typo="Typo.h5">The page '@Route' could not be found.</MudText>
+</MudStack>
+@code {
+	[Parameter]
+	public string? Route { get; set; }
+}

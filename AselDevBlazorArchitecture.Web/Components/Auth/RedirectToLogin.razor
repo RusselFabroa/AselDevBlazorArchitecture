@@ -1,0 +1,31 @@
+@using AselDevBlazorArchitecture.Application.Features.Auth
+@using AselDevBlazorArchitecture.Web.Services
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@inject IUserSessionService UserSession
+@inject SsoNavigationService SsoNavigation
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var currentUrl = NavManager.Uri;
+        var baseUrl = NavManager.BaseUri;
+        var localReturnUrl = currentUrl.Replace(baseUrl, "/");
+        var loginReturnUrl = SsoNavigation.Settings.IsClient
+            ? currentUrl
+            : localReturnUrl;
+        var session = await UserSession.GetCurrentAsync();
+
+        if (session.IsAuthenticated)
+        {
+            Snackbar.Add("You are signed in but not authorized to access this page.", Severity.Error);
+            NavManager.NavigateTo(
+                $"/unauthorized?urlReturn={Uri.EscapeDataString(localReturnUrl)}",
+                forceLoad: false);
+            return;
+        }
+
+        Snackbar.Add("Please sign in to continue.", Severity.Warning);
+        NavManager.NavigateTo(SsoNavigation.BuildLoginUrl(loginReturnUrl), SsoNavigation.Settings.IsClient);
+    }
+}

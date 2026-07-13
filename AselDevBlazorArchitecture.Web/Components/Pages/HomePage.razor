@@ -1,0 +1,557 @@
+@page "/company-dx-portal"
+
+@inject NavigationManager Nav
+
+<MudContainer MaxWidth="MaxWidth.False" Class="dx-home px-0">
+    <section class="dx-hero">
+        <div class="dx-hero-copy">
+            <div class="eyebrow">Company DX Portal</div>
+            <MudText Typo="Typo.h3" HtmlTag="h1" Class="hero-title">
+                Driving Digital Innovation Within Our Company
+            </MudText>
+            <MudText Typo="Typo.body1" Class="hero-subtitle">
+                Focused on tech systems, automation, and data analytics to support internal operations and growth.
+            </MudText>
+            <div class="hero-actions">
+                <MudButton Variant="Variant.Filled" Href="#portfolio" Class="primary-action" EndIcon="@Icons.Material.Filled.ArrowForward">
+                    View Applications
+                </MudButton>
+            </div>
+        </div>
+
+        <div class="dx-hero-panel">
+            <div class="signal-strip">
+                <span>Systems</span>
+                <span>Automation</span>
+                <span>Analytics</span>
+            </div>
+            <div class="hero-metrics">
+                <div>
+                    <strong>DX</strong>
+                    <span>TPC Common DX Team</span>
+                </div>
+                <div>
+                    <strong>3</strong>
+                    <span>Core capability areas</span>
+                </div>
+                <div>
+                    <strong>5</strong>
+                    <span>Primary technologies</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="section-block about-block">
+        <div class="section-heading">
+            <span>Overview</span>
+            <MudText Typo="Typo.h5" HtmlTag="h2">Company DX System</MudText>
+        </div>
+        <MudText Typo="Typo.body1" Class="section-copy">
+            A common digital platform for company applications, automation, reporting, and data-driven operations.
+        </MudText>
+    </section>
+
+    <section id="services" class="section-block">
+        <div class="section-heading">
+            <span>Capabilities</span>
+            <MudText Typo="Typo.h5" HtmlTag="h2">DX Capabilities</MudText>
+        </div>
+
+        <div class="card-grid three">
+            <article class="info-card">
+                <MudIcon Icon="@Icons.Material.Filled.Build" Class="card-icon" />
+                <h3>System Development</h3>
+                <p>Creating custom systems to meet internal needs and streamline operations.</p>
+            </article>
+            <article class="info-card">
+                <MudIcon Icon="@Icons.Material.Filled.Settings" Class="card-icon" />
+                <h3>Automation</h3>
+                <p>Implementing intelligent automation to reduce manual tasks and improve workflows.</p>
+            </article>
+            <article class="info-card">
+                <MudIcon Icon="@Icons.Material.Filled.Assessment" Class="card-icon" />
+                <h3>Data Analytics</h3>
+                <p>Analyzing data to provide actionable insights for better decision-making.</p>
+            </article>
+        </div>
+    </section>
+
+    <section id="portfolio" class="section-block portfolio-block">
+        <div class="section-heading">
+            <span>Applications</span>
+            <MudText Typo="Typo.h5" HtmlTag="h2">Application List</MudText>
+        </div>
+
+        <div class="card-grid applications-grid">
+            <article class="info-card">
+                <div class="card-topline">
+                    <MudIcon Icon="@Icons.Material.Filled.AssignmentTurnedIn" Class="card-icon" />
+                    <span class="status active">Active</span>
+                </div>
+                <h3>Leave and Return Reporting System</h3>
+                <p>Manage employee leave and return reporting in one company DX application.</p>
+                <MudButton Variant="Variant.Filled" Href="https://leave-app.tpc-dx.cloud/" Class="card-action" EndIcon="@Icons.Material.Filled.OpenInNew">
+                    Open App
+                </MudButton>
+            </article>
+            <article class="info-card">
+                <div class="card-topline">
+                    <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Class="card-icon" />
+                    <span class="status active">Active</span>
+                </div>
+                <h3>Issue or Incident Report</h3>
+                <p>Submit, monitor, and track company issues or incident reports.</p>
+                <MudButton Variant="Variant.Filled" Href="/issue-incident-report" Class="card-action" EndIcon="@Icons.Material.Filled.OpenInNew">
+                    Open App
+                </MudButton>
+            </article>
+            <article class="info-card">
+                <div class="card-topline">
+                    <MudIcon Icon="@Icons.Material.Filled.DirectionsBus" Class="card-icon" />
+                    <span class="status soon">Soon</span>
+                </div>
+                <h3>Shuttle Manifest System</h3>
+                <p>Planned shuttle passenger manifest and transport monitoring application.</p>
+                <MudButton Variant="Variant.Outlined" Disabled="true" Class="card-action disabled-action">
+                    Coming Soon
+                </MudButton>
+            </article>
+            <article class="info-card">
+                <div class="card-topline">
+                    <MudIcon Icon="@Icons.Material.Filled.Badge" Class="card-icon" />
+                    <span class="status soon">Soon</span>
+                </div>
+                <h3>Visitor / Guest Application and Monitoring</h3>
+                <p>Planned visitor registration, approval, and guest monitoring system.</p>
+                <MudButton Variant="Variant.Outlined" Disabled="true" Class="card-action disabled-action">
+                    Coming Soon
+                </MudButton>
+            </article>
+            <article class="info-card">
+                <div class="card-topline">
+                    <MudIcon Icon="@Icons.Material.Filled.HealthAndSafety" Class="card-icon" />
+                    <span class="status soon">Soon</span>
+                </div>
+                <h3>Disaster Response System</h3>
+                <p>Planned application for emergency coordination and response tracking.</p>
+                <MudButton Variant="Variant.Outlined" Disabled="true" Class="card-action disabled-action">
+                    Coming Soon
+                </MudButton>
+            </article>
+        </div>
+    </section>
+
+    <section id="ai-agents" class="section-block">
+        <div class="section-heading">
+            <span>AI Agent / Bot</span>
+            <MudText Typo="Typo.h5" HtmlTag="h2">AI Agent List</MudText>
+        </div>
+
+        <div class="card-grid applications-grid">
+            <article class="info-card">
+                <div class="card-topline">
+                    <MudIcon Icon="@Icons.Material.Filled.SmartToy" Class="card-icon" />
+                    <span class="status internal">Internal Only</span>
+                </div>
+                <h3>HERA - Human Resource AI Assistant</h3>
+                <p>Internal HR assistant for company-related support and information access.</p>
+                <MudButton Variant="Variant.Outlined" Disabled="true" Class="card-action disabled-action">
+                    Internal Only
+                </MudButton>
+            </article>
+            <article class="info-card placeholder-card">
+                <div class="card-topline">
+                    <MudIcon Icon="@Icons.Material.Filled.MoreHoriz" Class="card-icon" />
+                    <span class="status soon">Soon</span>
+                </div>
+                <h3>Additional AI Agent / Bot</h3>
+                <p>Reserved for upcoming company DX AI assistant initiatives.</p>
+                <MudButton Variant="Variant.Outlined" Disabled="true" Class="card-action disabled-action">
+                    Coming Soon
+                </MudButton>
+            </article>
+        </div>
+    </section>
+
+    <section id="tools" class="section-block tools-block">
+        <div class="section-heading">
+            <span>Stack</span>
+            <MudText Typo="Typo.h5" HtmlTag="h2">Technologies We Use</MudText>
+        </div>
+        <div class="tool-list">
+            <span>C#</span>
+            <span>ASP.NET Blazor</span>
+            <span>Power Automate</span>
+            <span>Power Apps</span>
+            <span>Tableau</span>
+        </div>
+    </section>
+
+</MudContainer>
+
+<style>
+    :root {
+        --tdk-blue: #0046ad;
+        --tdk-blue-dark: #002d72;
+        --tdk-blue-soft: #e9f1ff;
+        --tdk-line: #cdd8eb;
+        --tdk-text: #172033;
+        --tdk-muted: #536174;
+    }
+
+    .dx-home {
+        background: #ffffff;
+        color: var(--tdk-text);
+    }
+
+    .dx-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr);
+        min-height: 360px;
+        background: linear-gradient(105deg, var(--tdk-blue-dark) 0%, var(--tdk-blue) 62%, #ffffff 62.2%);
+        border-bottom: 1px solid var(--tdk-line);
+    }
+
+    .dx-hero-copy {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 14px;
+        padding: clamp(28px, 5vw, 56px);
+        color: #ffffff;
+        max-width: 760px;
+    }
+
+    .eyebrow,
+    .section-heading span {
+        color: #d7e7ff;
+        font-size: .75rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .hero-title {
+        color: #ffffff;
+        font-weight: 800;
+        line-height: 1.05;
+        max-width: 700px;
+        letter-spacing: 0;
+    }
+
+    .hero-subtitle {
+        color: #e6f0ff;
+        max-width: 620px;
+        line-height: 1.55;
+    }
+
+    .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 4px;
+    }
+
+    .primary-action {
+        background: #ffffff !important;
+        color: var(--tdk-blue-dark) !important;
+        border-radius: 2px !important;
+        box-shadow: none !important;
+        font-weight: 800 !important;
+    }
+
+    .secondary-action {
+        color: #ffffff !important;
+        border-color: #ffffff !important;
+        border-radius: 2px !important;
+        font-weight: 800 !important;
+    }
+
+    .dx-hero-panel {
+        align-self: stretch;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 18px;
+        padding: clamp(22px, 4vw, 44px);
+        background:
+            linear-gradient(90deg, rgba(255,255,255,.2), rgba(255,255,255,.95)),
+            url('/digital-transformation.png') right 26px center / min(44%, 180px) no-repeat;
+    }
+
+    .signal-strip,
+    .hero-metrics,
+    .info-card {
+        border: 1px solid var(--tdk-line);
+        border-radius: 2px;
+        background: rgba(255,255,255,.94);
+    }
+
+    .signal-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px;
+        width: fit-content;
+    }
+
+    .signal-strip span,
+    .tool-list span {
+        border-left: 4px solid var(--tdk-blue);
+        background: var(--tdk-blue-soft);
+        color: var(--tdk-blue-dark);
+        font-weight: 800;
+        padding: 7px 10px;
+        font-size: .82rem;
+    }
+
+    .hero-metrics {
+        display: grid;
+        gap: 0;
+        max-width: 360px;
+    }
+
+    .hero-metrics div {
+        display: grid;
+        grid-template-columns: 64px 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--tdk-line);
+    }
+
+    .hero-metrics div:last-child {
+        border-bottom: 0;
+    }
+
+    .hero-metrics strong {
+        color: var(--tdk-blue);
+        font-size: 1.5rem;
+        line-height: 1;
+    }
+
+    .hero-metrics span {
+        color: var(--tdk-muted);
+        font-size: .9rem;
+    }
+
+    .section-block {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 30px clamp(16px, 3vw, 32px);
+    }
+
+    .about-block,
+    .portfolio-block {
+        background: #f7faff;
+        max-width: none;
+        padding-left: max(clamp(16px, 3vw, 32px), calc((100vw - 1180px) / 2 + 24px));
+        padding-right: max(clamp(16px, 3vw, 32px), calc((100vw - 1180px) / 2 + 24px));
+    }
+
+    .section-heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        border-bottom: 2px solid var(--tdk-blue);
+        padding-bottom: 8px;
+        margin-bottom: 16px;
+    }
+
+    .section-heading h2 {
+        color: var(--tdk-blue-dark);
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .section-heading span {
+        color: var(--tdk-blue);
+    }
+
+    .section-copy {
+        color: var(--tdk-muted);
+        max-width: 860px;
+        line-height: 1.6;
+    }
+
+    .card-grid {
+        display: grid;
+        gap: 14px;
+    }
+
+    .card-grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .applications-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    .info-card {
+        display: flex;
+        flex-direction: column;
+        padding: 16px;
+        min-height: 150px;
+        border-top: 4px solid var(--tdk-blue);
+    }
+
+    .card-topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .card-icon {
+        color: var(--tdk-blue);
+    }
+
+    .status {
+        border: 1px solid var(--tdk-line);
+        color: var(--tdk-blue-dark);
+        font-size: .68rem;
+        font-weight: 900;
+        letter-spacing: .04em;
+        line-height: 1;
+        padding: 6px 8px;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .status.active {
+        background: #e9f8ef;
+        border-color: #92d6a8;
+        color: #166534;
+    }
+
+    .status.soon {
+        background: #eef3fb;
+        color: #475569;
+    }
+
+    .status.internal {
+        background: var(--tdk-blue-soft);
+        border-color: #9bbcf2;
+        color: var(--tdk-blue-dark);
+    }
+
+    .placeholder-card {
+        border-top-color: #7a8aa3;
+    }
+
+    .card-action {
+        align-self: flex-start;
+        background: var(--tdk-blue) !important;
+        border-color: var(--tdk-blue) !important;
+        border-radius: 2px !important;
+        box-shadow: none !important;
+        color: #ffffff !important;
+        font-size: .78rem !important;
+        font-weight: 800 !important;
+        margin-top: auto !important;
+        min-height: 32px !important;
+        padding: 6px 12px !important;
+    }
+
+    .disabled-action {
+        background: #eef3fb !important;
+        border-color: var(--tdk-line) !important;
+        color: #667085 !important;
+    }
+
+    .info-card h3 {
+        color: var(--tdk-blue-dark);
+        font-size: 1rem;
+        font-weight: 800;
+        line-height: 1.25;
+        margin: 0 0 6px;
+    }
+
+    .info-card p {
+        color: var(--tdk-muted);
+        font-size: .92rem;
+        line-height: 1.45;
+        margin: 0;
+    }
+
+    .info-card a {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--tdk-blue);
+        font-weight: 800;
+        margin-top: 10px;
+        text-decoration: none;
+    }
+
+    .tool-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    @@media (max-width: 960px) {
+        .dx-hero {
+            grid-template-columns: 1fr;
+            background: var(--tdk-blue);
+        }
+
+        .dx-hero-copy {
+            padding: 28px 20px;
+        }
+
+        .dx-hero-panel {
+            background: #f7faff;
+            padding: 18px 20px;
+        }
+
+        .card-grid.three,
+        .applications-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .info-card {
+            min-height: auto;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .dx-hero {
+            min-height: auto;
+        }
+
+        .hero-title {
+            font-size: 2rem;
+        }
+
+        .hero-actions {
+            flex-direction: column;
+        }
+
+        .hero-actions .mud-button-root {
+            width: 100%;
+        }
+
+        .section-block,
+        .about-block,
+        .portfolio-block {
+            padding-top: 22px;
+            padding-bottom: 22px;
+        }
+
+        .section-heading {
+            align-items: start;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .signal-strip,
+        .hero-metrics {
+            width: 100%;
+            max-width: none;
+        }
+    }
+</style>

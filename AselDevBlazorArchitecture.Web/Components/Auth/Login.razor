@@ -1,0 +1,214 @@
+@page "/login"
+@attribute [AllowAnonymous]
+@using AselDevBlazorArchitecture.Web.Components.Layout
+@layout EmptyLayout
+
+@using AselDevBlazorArchitecture.Application.Features.Auth
+@using AselDevBlazorArchitecture.Application.Features.Auth.DTOs
+@using AselDevBlazorArchitecture.Web.Services
+@using Microsoft.AspNetCore.Authorization
+
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@inject IUserSessionService UserSession
+@inject SsoNavigationService SsoNavigation
+
+<PageTitle>Sign In</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="login-container">
+
+    <!-- Back Button -->
+    <MudButton Variant="Variant.Text"
+               StartIcon="@Icons.Material.Outlined.ArrowBack"
+               OnClick="@(() => NavManager.NavigateTo("/"))">
+        Back to Home
+    </MudButton>
+
+    <MudPaper Class="pa-6 mt-4" Elevation="1">
+
+        @if (_checkingAuth)
+        {
+            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="2" Class="py-8">
+                <MudProgressCircular Indeterminate="true" Size="Size.Medium" Color="Color.Primary" />
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Checking your session...</MudText>
+            </MudStack>
+        }
+        else
+        {
+            <!-- Header -->
+            <MudStack Spacing="1" Class="mb-4">
+                <MudText Typo="Typo.h5">Sign in</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Enter your credentials to continue
+                </MudText>
+            </MudStack>
+
+            <!-- Form -->
+            <MudForm @ref="_form" @bind-IsValid="_isValid">
+
+                <MudStack Spacing="2">
+
+                    <MudTextField @bind-Value="_model.UsernameOrEmployeeId"
+                                  Label="Username / Employee ID"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Text"
+                                  Required="true"
+                                  RequiredError="Username or employee ID is required"
+                                  FullWidth="true" />
+
+                    <MudTextField @bind-Value="_model.Password"
+                                  Label="Password"
+                                  Variant="Variant.Outlined"
+                                  InputType="@_passwordInputType"
+                                  Required="true"
+                                  Adornment="Adornment.End"
+                                  AdornmentIcon="@_passwordIcon"
+                                  OnAdornmentClick="TogglePassword"
+                                  FullWidth="true" />
+
+                    @if (_errorMessage is not null)
+                    {
+                        <MudAlert Severity="Severity.Error" Dense="true">
+                            @_errorMessage
+                        </MudAlert>
+                    }
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               FullWidth="true"
+                               OnClick="HandleLoginAsync"
+                               Disabled="@_loading">
+
+                        @if (_loading)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                            <MudText>Signing in...</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Sign In</MudText>
+                      
+                        }
+                    </MudButton>
+
+                </MudStack>
+
+            </MudForm>
+        }
+
+    </MudPaper>
+
+</MudContainer>
+
+<style>
+    .login-container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+</style>
+
+@code {
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    [SupplyParameterFromQuery(Name = "urlReturn")]
+    private string? UrlReturn { get; set; }
+
+    private LoginDto _model = new();
+    private MudForm _form = default!;
+    private bool _isValid = false;
+    private bool _loading = false;
+    private bool _checkingAuth = true;
+    private string? _errorMessage;
+
+    private bool _showPassword = false;
+    private InputType _passwordInputType => _showPassword ? InputType.Text : InputType.Password;
+    private string _passwordIcon => _showPassword
+        ? Icons.Material.Outlined.VisibilityOff
+        : Icons.Material.Outlined.Visibility;
+
+    private void TogglePassword() => _showPassword = !_showPassword;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        var session = await UserSession.GetCurrentAsync();
+        if (session.IsAuthenticated)
+        {
+            NavManager.NavigateTo(GetSafeReturnUrl(), true);
+            return;
+        }
+
+        if (SsoNavigation.Settings.IsClient)
+        {
+            NavManager.NavigateTo(SsoNavigation.BuildLoginUrl(GetClientReturnUrl()), true);
+            return;
+        }
+
+        _checkingAuth = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleLoginAsync()
+    {
+        if (_checkingAuth)
+            return;
+
+        await _form.ValidateAsync();
+        if (!_isValid) return;
+
+        _loading = true;
+        _errorMessage = null;
+
+        try
+        {
+            var response = await UserSession.SignInAsync(_model);
+
+            if (response.Success && response.Data is not null)
+            {
+                Snackbar.Add($"Welcome back, {response.Data.DisplayName}!", Severity.Success);
+
+                NavManager.NavigateTo(GetSafeReturnUrl(), true);
+            }
+            else
+            {
+                _errorMessage = response.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private string GetSafeReturnUrl()
+    {
+        return SsoNavigation.GetSafeReturnUrl(UrlReturn, ReturnUrl);
+    }
+
+    private string GetClientReturnUrl()
+    {
+        var safeReturnUrl = GetSafeReturnUrl();
+
+        if (Uri.TryCreate(safeReturnUrl, UriKind.Absolute, out var absoluteUri))
+            return absoluteUri.ToString();
+
+        if (safeReturnUrl.StartsWith("/login", StringComparison.OrdinalIgnoreCase))
+            safeReturnUrl = "/";
+
+        var baseUri = NavManager.BaseUri.TrimEnd('/');
+        var localPath = safeReturnUrl.StartsWith("/", StringComparison.Ordinal)
+            ? safeReturnUrl
+            : $"/{safeReturnUrl}";
+
+        return $"{baseUri}{localPath}";
+    }
+}

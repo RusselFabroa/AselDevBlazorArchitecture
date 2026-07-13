@@ -1,0 +1,290 @@
+@page "/users"
+@attribute [Authorize(Roles = "Admin")]
+@using AselDevBlazorArchitecture.Application.Features.Users
+@using AselDevBlazorArchitecture.Web.Services
+
+@inject IUserAdministrationService UserAdministration
+@inject ISnackbar Snackbar
+@inject SsoNavigationService SsoNavigation
+
+<PageTitle>User Management</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-6">
+    <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+        <MudStack Spacing="1">
+            <MudText Typo="Typo.h5">Users</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Create accounts and review current access.</MudText>
+        </MudStack>
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Outlined.Refresh"
+                   OnClick="LoadUsersAsync"
+                   Disabled="@_loadingUsers">
+            Refresh
+        </MudButton>
+    </MudStack>
+
+    <MudGrid Spacing="3">
+        <MudItem xs="12" md="5" lg="4">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudStack Spacing="1" Class="mb-3">
+                    <MudText Typo="Typo.h6">Add User</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Employee ID will be used as the login username.</MudText>
+                </MudStack>
+
+                <MudForm @ref="_form" @bind-IsValid="_isValid">
+                    <MudStack Spacing="2">
+                        <MudTextField @bind-Value="_model.EmployeeId"
+                                      Label="Employee ID / Username"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="Employee ID is required"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Outlined.Badge"
+                                      Disabled="@_saving" />
+
+                        <MudTextField @bind-Value="_model.FullName"
+                                      Label="Full Name"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="Full name is required"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Outlined.Person"
+                                      Disabled="@_saving" />
+
+                        <MudTextField @bind-Value="_model.Email"
+                                      Label="Email Address"
+                                      Variant="Variant.Outlined"
+                                      InputType="InputType.Email"
+                                      Required="true"
+                                      RequiredError="Email is required"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Outlined.Email"
+                                      Disabled="@_saving" />
+
+                        <MudTextField @bind-Value="_model.Department"
+                                      Label="Department"
+                                      Variant="Variant.Outlined"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Outlined.Business"
+                                      Disabled="@_saving" />
+
+                        <MudSelect @bind-Value="_model.Role"
+                                   Label="Role"
+                                   Variant="Variant.Outlined"
+                                   Required="true"
+                                   Adornment="Adornment.Start"
+                                   AdornmentIcon="@Icons.Material.Outlined.AdminPanelSettings"
+                                   Disabled="@_saving">
+                            @foreach (var role in _roles)
+                            {
+                                <MudSelectItem Value="@role">@role</MudSelectItem>
+                            }
+                        </MudSelect>
+
+                        <MudTextField @bind-Value="_model.Password"
+                                      Label="Temporary Password"
+                                      Variant="Variant.Outlined"
+                                      InputType="@_passwordInputType"
+                                      Required="true"
+                                      RequiredError="Password is required"
+                                      HelperText="Min 8 chars with uppercase and number"
+                                      Adornment="Adornment.End"
+                                      AdornmentIcon="@_passwordIcon"
+                                      OnAdornmentClick="TogglePassword"
+                                      Disabled="@_saving" />
+
+                        @if (_errorMessage is not null)
+                        {
+                            <MudAlert Severity="Severity.Error" Dense="true">
+                                @_errorMessage
+                            </MudAlert>
+                        }
+
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Outlined.PersonAdd"
+                                   OnClick="CreateUserAsync"
+                                   Disabled="@_saving"
+                                   FullWidth="true">
+                            @if (_saving)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                <span>Creating...</span>
+                            }
+                            else
+                            {
+                                <span>Add User</span>
+                            }
+                        </MudButton>
+                    </MudStack>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="7" lg="8">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
+                    <MudText Typo="Typo.h6">Current Users</MudText>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                        @_users.Count user@(_users.Count == 1 ? string.Empty : "s")
+                    </MudChip>
+                </MudStack>
+
+                <MudTable Items="_users" Dense="true" Hover="true" Loading="@_loadingUsers">
+                    <HeaderContent>
+                        <MudTh>Employee ID</MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Email</MudTh>
+                        <MudTh>Department</MudTh>
+                        <MudTh>Role</MudTh>
+                        <MudTh>Status</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Employee ID">@context.EmployeeId</MudTd>
+                        <MudTd DataLabel="Name">@context.FullName</MudTd>
+                        <MudTd DataLabel="Email">@context.Email</MudTd>
+                        <MudTd DataLabel="Department">@context.Department</MudTd>
+                        <MudTd DataLabel="Role">@context.Role</MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string"
+                                     Size="Size.Small"
+                                     Color="@(context.IsActive ? Color.Success : Color.Default)"
+                                     Variant="Variant.Outlined">
+                                @(context.IsActive ? "Active" : "Inactive")
+                            </MudChip>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">No users found.</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private CreateUserRequest _model = NewUserModel();
+    private MudForm _form = default!;
+    private bool _isValid;
+    private bool _saving;
+    private bool _loadingUsers;
+    private bool _showPassword;
+    private string? _errorMessage;
+    private List<string> _roles = new();
+    private IReadOnlyList<UserSummaryDto> _users = Array.Empty<UserSummaryDto>();
+
+    private InputType _passwordInputType => _showPassword ? InputType.Text : InputType.Password;
+    private string _passwordIcon => _showPassword
+        ? Icons.Material.Outlined.VisibilityOff
+        : Icons.Material.Outlined.Visibility;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (!SsoNavigation.Settings.IsIdentityProvider)
+            {
+                Snackbar.Add("User administration is only available in the Identity Provider app.", Severity.Warning);
+                return;
+            }
+
+            await LoadRolesAsync();
+            await LoadUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
+        }
+        
+    }
+
+    private async Task CreateUserAsync()
+    {
+        await _form.ValidateAsync();
+        if (!_isValid) return;
+
+        _saving = true;
+        _errorMessage = null;
+
+        try
+        {
+            var response = await UserAdministration.CreateUserAsync(_model);
+            if (response.Success)
+            {
+                var employeeId = response.Data?.EmployeeId ?? _model.EmployeeId;
+                Snackbar.Add($"User '{employeeId}' added successfully.", Severity.Success);
+                _model = NewUserModel();
+                await _form.ResetAsync();
+                await LoadUsersAsync();
+            }
+            else
+            {
+                _errorMessage = response.Message;
+                Snackbar.Add(response.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Unexpected error: {ex.Message}";
+            Snackbar.Add(_errorMessage, Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task LoadRolesAsync()
+    {
+        var response = await UserAdministration.GetRolesAsync();
+        if (!response.Success || response.Data is null)
+        {
+            _errorMessage = response.Message;
+            Snackbar.Add(response.Message, Severity.Warning);
+            return;
+        }
+
+        _roles = response.Data.ToList();
+
+        if (_roles.Count == 0)
+        {
+            _roles = new() { "Admin", "Manager", "User", "Viewer" };
+        }
+
+        if (!_roles.Contains(_model.Role))
+        {
+            _model.Role = _roles.Contains("User") ? "User" : _roles.First();
+        }
+    }
+
+    private async Task LoadUsersAsync()
+    {
+        _loadingUsers = true;
+
+        try
+        {
+            var response = await UserAdministration.GetUsersAsync();
+            if (!response.Success || response.Data is null)
+            {
+                _errorMessage = response.Message;
+                Snackbar.Add(response.Message, Severity.Warning);
+                _users = Array.Empty<UserSummaryDto>();
+                return;
+            }
+
+            _users = response.Data;
+        }
+        finally
+        {
+            _loadingUsers = false;
+        }
+    }
+
+    private void TogglePassword() => _showPassword = !_showPassword;
+
+    private static CreateUserRequest NewUserModel()
+        => new() { Role = "User" };
+}

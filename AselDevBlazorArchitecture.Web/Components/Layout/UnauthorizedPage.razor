@@ -1,0 +1,167 @@
+@page "/unauthorized"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@using AselDevBlazorArchitecture.Application.Features.Auth
+@inject NavigationManager NavManager
+@inject IUserSessionService UserSession
+
+<div class="unauth-root">
+    <div class="unauth-card">
+
+        <div class="unauth-icon">
+            <MudIcon Icon="@Icons.Material.Outlined.Block" />
+        </div>
+
+        <h2 class="unauth-title">Access Denied</h2>
+        <p class="unauth-desc">
+            You are signed in, but your account is not authorized to access this page.
+            Please contact your administrator if you believe this is a mistake.
+        </p>
+
+        @if (!string.IsNullOrWhiteSpace(UrlReturn))
+        {
+            <div class="unauth-target">
+                <span>Requested page</span>
+                <strong>@UrlReturn</strong>
+            </div>
+        }
+
+        <div class="unauth-actions">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Href="/"
+                       Class="unauth-btn">
+                Go to Dashboard
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       OnClick="SignInDifferentAccountAsync"
+                       Class="unauth-btn-ghost">
+                Sign in with different account
+            </MudButton>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .unauth-root {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #F8FAFC;
+        padding: 24px;
+    }
+
+    .unauth-card {
+        width: 100%;
+        max-width: 440px;
+        background: #FFFFFF;
+        border: 1px solid var(--asel-border);
+        border-radius: 8px;
+        padding: 42px 34px;
+        text-align: center;
+        box-shadow: var(--asel-shadow-md);
+        animation: cardIn 0.3s cubic-bezier(0.4,0,0.2,1) both;
+    }
+
+    @@keyframes cardIn {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .unauth-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 8px;
+        background: rgba(239,68,68,0.08);
+        border: 1px solid rgba(239,68,68,0.20);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+    }
+
+    .unauth-icon .mud-icon-root {
+        color: #EF4444 !important;
+        font-size: 32px !important;
+    }
+
+    .unauth-title {
+        font-family: var(--font-display);
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--asel-text-primary);
+        margin: 0 0 10px;
+        letter-spacing: 0;
+    }
+
+    .unauth-desc {
+        font-size: 0.825rem;
+        color: var(--asel-text-secondary);
+        line-height: 1.65;
+        margin: 0 0 22px;
+    }
+
+    .unauth-target {
+        background: #F8FAFC;
+        border: 1px solid var(--asel-border);
+        border-radius: 8px;
+        margin-bottom: 22px;
+        padding: 10px 12px;
+        text-align: left;
+    }
+
+    .unauth-target span {
+        color: var(--asel-text-muted);
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-bottom: 3px;
+        text-transform: uppercase;
+    }
+
+    .unauth-target strong {
+        color: var(--asel-text-primary);
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
+
+    .unauth-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .unauth-btn,
+    .unauth-btn-ghost {
+        border-radius: 8px !important;
+        font-family: var(--font-display) !important;
+        font-weight: 600 !important;
+    }
+
+    .unauth-btn-ghost {
+        border-color: var(--asel-border) !important;
+        color: var(--asel-text-secondary) !important;
+    }
+</style>
+
+@code {
+    [SupplyParameterFromQuery(Name = "urlReturn")]
+    private string? UrlReturn { get; set; }
+
+    private async Task SignInDifferentAccountAsync()
+    {
+        await UserSession.ClearAsync();
+        var returnUrl = string.IsNullOrWhiteSpace(UrlReturn) ? "/" : UrlReturn;
+        NavManager.NavigateTo($"/login?urlReturn={Uri.EscapeDataString(returnUrl)}", true);
+    }
+}

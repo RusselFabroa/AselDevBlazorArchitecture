@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="AselDevBlazorArchitecture.Application/AselDevBlazorArchitecture.Application.csproj" />
+  <Project Path="AselDevBlazorArchitecture.Domain/AselDevBlazorArchitecture.Domain.csproj" />
+  <Project Path="AselDevBlazorArchitecture.Infrastructure/AselDevBlazorArchitecture.Infrastructure.csproj" />
+  <Project Path="AselDevBlazorArchitecture.Migrations.MySql/AselDevBlazorArchitecture.Migrations.MySql.csproj" />
+  <Project Path="AselDevBlazorArchitecture.Migrations.PostgreSql/AselDevBlazorArchitecture.Migrations.PostgreSql.csproj" />
+  <Project Path="AselDevBlazorArchitecture.Web/AselDevBlazorArchitecture.Web.csproj" />
+</Solution>

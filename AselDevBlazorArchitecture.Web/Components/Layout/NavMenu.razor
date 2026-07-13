@@ -1,0 +1,79 @@
+@inject NavigationManager NavManager
+@inject AselDevBlazorArchitecture.Web.Services.SsoNavigationService SsoNavigation
+
+<MudNavMenu Dense Class="nav-menu" Margin="Margin.Dense">
+
+    <div class="nav-intro">
+        <MudText Typo="Typo.subtitle2">AselDev Blazor</MudText>
+        <MudText Typo="Typo.caption">Clean Architecture starter</MudText>
+    </div>
+
+    <MudNavLink Href="/" Icon="@Icons.Material.Outlined.Home" Match="NavLinkMatch.All">
+        <MudText Typo="Typo.body1">Overview</MudText>
+    </MudNavLink>
+
+    <MudText Typo="Typo.caption" Class="nav-section">Administration</MudText>
+
+    @if (SsoNavigation.Settings.IsIdentityProvider)
+    {
+        <MudNavLink Href="/users" Icon="@Icons.Material.Outlined.Group">
+            <MudText Typo="Typo.body1">Users</MudText>
+        </MudNavLink>
+    }
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <MudNavLink Href="@SignInUrl" ForceLoad="@SsoNavigation.Settings.IsClient" Icon="@Icons.Material.Outlined.Login">
+                <MudText Typo="Typo.body1">Sign In</MudText>
+            </MudNavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+
+</MudNavMenu>
+
+<style>
+    .nav-menu {
+        padding: 10px 8px 14px;
+    }
+
+    .nav-intro {
+        border-bottom: 1px solid var(--mud-palette-divider);
+        margin: 0 8px 10px;
+        padding: 6px 6px 14px;
+    }
+
+    .nav-intro .mud-typography-subtitle2 {
+        color: var(--mud-palette-text-primary);
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    .nav-intro .mud-typography-caption {
+        color: var(--mud-palette-text-secondary);
+        display: block;
+        margin-top: 2px;
+    }
+
+    .nav-section {
+        padding: 18px 14px 6px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: var(--mud-palette-text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0;
+    }
+
+    .nav-menu .mud-nav-link .mud-typography {
+        line-height: 1.2;
+    }
+
+    .nav-menu .mud-nav-link .mud-nav-link-icon {
+        font-size: 1rem;
+    }
+</style>
+
+@code {
+    private string SignInUrl => SsoNavigation.Settings.IsClient
+        ? SsoNavigation.BuildLoginUrl(NavManager.Uri)
+        : "/login";
+}

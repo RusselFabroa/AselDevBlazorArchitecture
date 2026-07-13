@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+
+    <!-- App styles -->
+    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="AselDevBlazorArchitecture.Web.styles.css" />
+
+    <!-- Font (Modern UI standard) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..600&display=swap" rel="stylesheet">
+    <!-- MudBlazor -->
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+
+    <HeadOutlet />
+</head>
+
+<body>
+    <CascadingAuthenticationState>
+        <Routes @rendermode="@(new InteractiveServerRenderMode(prerender: false))" />
+    </CascadingAuthenticationState>
+
+    <!-- Blazor -->
+    <script src="_framework/blazor.web.js"></script>
+
+    <!-- MudBlazor -->
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+
+    <!-- Optional -->
+    <script src="js/asel-layout.js"></script>
+</body>
+
+</html>
